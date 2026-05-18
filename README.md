@@ -29,7 +29,7 @@ go build -o nextcloud-pp-mcp ./cmd/nextcloud-pp-mcp
 
 ### Pre-built binary
 
-Download from the [Releases](https://github.com/kelvincushman/nextcloud-pp-cli/releases) page for your platform.
+Download from the [Releases](https://github.com/kelvincushman/nextcloud-pp-cli/releases/latest) page for your platform.
 
 On Unix/macOS:
 ```bash
