@@ -1,0 +1,54 @@
+{
+  "manifest_version": "0.3",
+  "name": "nextcloud-pp-mcp",
+  "display_name": "Nextcloud",
+  "version": "4.9.0",
+  "description": "Nextcloud API surface as MCP tools.",
+  "author": {
+    "name": "CLI Printing Press"
+  },
+  "license": "Apache-2.0",
+  "server": {
+    "type": "binary",
+    "entry_point": "bin/nextcloud-pp-mcp",
+    "mcp_config": {
+      "command": "${__dirname}/bin/nextcloud-pp-mcp",
+      "args": [],
+      "env": {
+        "NEXTCLOUD_HOST": "${user_config.nextcloud_host}",
+        "NEXTCLOUD_PASSWORD": "${user_config.nextcloud_password}",
+        "NEXTCLOUD_USERNAME": "${user_config.nextcloud_username}"
+      }
+    }
+  },
+  "user_config": {
+    "nextcloud_host": {
+      "type": "string",
+      "title": "NEXTCLOUD_HOST",
+      "description": "Sets NEXTCLOUD_HOST for the endpoint template variable {host}.",
+      "default": "http://localhost"
+    },
+    "nextcloud_password": {
+      "type": "string",
+      "title": "NEXTCLOUD_PASSWORD",
+      "description": "Sets NEXTCLOUD_PASSWORD for the Nextcloud MCP server.",
+      "sensitive": true,
+      "required": true
+    },
+    "nextcloud_username": {
+      "type": "string",
+      "title": "NEXTCLOUD_USERNAME",
+      "description": "Sets NEXTCLOUD_USERNAME for the Nextcloud MCP server.",
+      "sensitive": true,
+      "required": true
+    }
+  },
+  "compatibility": {
+    "claude_desktop": ">=1.0.0",
+    "platforms": [
+      "darwin",
+      "linux",
+      "win32"
+    ]
+  }
+}

@@ -1,0 +1,1904 @@
+openapi: "3.0.3"
+info:
+  title: Nextcloud
+  version: "32.0"
+  description: >
+    Nextcloud OCS v2, WebDAV, CalDAV, CardDAV, and app APIs for files, sharing,
+    users, notes, calendar, Talk, activity, Deck, contacts, and more.
+  x-cli-name: nextcloud
+  x-env-prefix: NEXTCLOUD
+servers:
+  - url: "{host}"
+    variables:
+      host:
+        default: "http://localhost"
+        description: "Nextcloud base URL — set NEXTCLOUD_HOST"
+
+components:
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+      description: "HTTP Basic Auth. Set NEXTCLOUD_USERNAME and NEXTCLOUD_PASSWORD."
+  schemas:
+    OCSMeta:
+      type: object
+      properties:
+        status: { type: string }
+        statuscode: { type: integer }
+        message: { type: string }
+    OCSEnvelope:
+      type: object
+      properties:
+        ocs:
+          type: object
+          properties:
+            meta: { $ref: "#/components/schemas/OCSMeta" }
+            data: {}
+    FileEntry:
+      type: object
+      properties:
+        href: { type: string }
+        name: { type: string }
+        size: { type: integer }
+        type: { type: string, enum: [file, directory] }
+        lastmodified: { type: string, format: date-time }
+        etag: { type: string }
+        contenttype: { type: string }
+    ShareEntry:
+      type: object
+      properties:
+        id: { type: string }
+        share_type: { type: integer }
+        uid_owner: { type: string }
+        displayname_owner: { type: string }
+        permissions: { type: integer }
+        stime: { type: integer }
+        parent: {}
+        expiration: { type: string }
+        token: { type: string }
+        uid_file_owner: { type: string }
+        displayname_file_owner: { type: string }
+        path: { type: string }
+        item_type: { type: string }
+        item_source: { type: integer }
+        share_with: { type: string }
+        share_with_displayname: { type: string }
+        url: { type: string }
+        mail_send: { type: integer }
+        hide_download: { type: integer }
+    UserEntry:
+      type: object
+      properties:
+        id: { type: string }
+        enabled: { type: boolean }
+        email: { type: string }
+        displayname: { type: string }
+        quota:
+          type: object
+          properties:
+            free: { type: integer }
+            used: { type: integer }
+            total: { type: integer }
+            relative: { type: number }
+            quota: { type: integer }
+        groups: { type: array, items: { type: string } }
+        subadmin: { type: array, items: { type: string } }
+        language: { type: string }
+        locale: { type: string }
+        last_login: { type: integer }
+        backend: { type: string }
+        storageLocation: { type: string }
+    NoteEntry:
+      type: object
+      properties:
+        id: { type: integer }
+        etag: { type: string }
+        readonly: { type: boolean }
+        content: { type: string }
+        title: { type: string }
+        category: { type: string }
+        favorite: { type: boolean }
+        modified: { type: integer }
+        error: { type: boolean }
+        errorType: { type: string }
+    TalkRoom:
+      type: object
+      properties:
+        token: { type: string }
+        type: { type: integer }
+        name: { type: string }
+        displayName: { type: string }
+        participantType: { type: integer }
+        hasPassword: { type: boolean }
+        hasCall: { type: boolean }
+        lastActivity: { type: integer }
+        unreadMessages: { type: integer }
+        unreadMention: { type: boolean }
+    TalkMessage:
+      type: object
+      properties:
+        id: { type: integer }
+        token: { type: string }
+        actorType: { type: string }
+        actorId: { type: string }
+        actorDisplayName: { type: string }
+        timestamp: { type: integer }
+        message: { type: string }
+        messageParameters: { type: object }
+        systemMessage: { type: string }
+        messageType: { type: string }
+    ActivityEntry:
+      type: object
+      properties:
+        activity_id: { type: integer }
+        app: { type: string }
+        type: { type: string }
+        user: { type: string }
+        subject: { type: string }
+        subject_rich: {}
+        message: { type: string }
+        object_type: { type: string }
+        object_id: { type: integer }
+        object_name: { type: string }
+        objects: { type: object }
+        link: { type: string }
+        datetime: { type: string, format: date-time }
+        icon: { type: string }
+    DeckBoard:
+      type: object
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        owner:
+          type: object
+          properties:
+            primaryKey: { type: string }
+            uid: { type: string }
+            displayname: { type: string }
+            type: { type: integer }
+        color: { type: string }
+        archived: { type: boolean }
+        shared: { type: integer }
+        deletedAt: { type: integer }
+        lastModified: { type: integer }
+    DeckStack:
+      type: object
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        boardId: { type: integer }
+        order: { type: integer }
+        deletedAt: { type: integer }
+        cards: { type: array, items: { $ref: "#/components/schemas/DeckCard" } }
+    DeckCard:
+      type: object
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        description: { type: string }
+        stackId: { type: integer }
+        type: { type: string }
+        lastModified: { type: integer }
+        lastEditor: { type: string }
+        createdAt: { type: integer }
+        archived: { type: boolean }
+        duedate: { type: string }
+        deletedAt: { type: integer }
+        owner:
+          type: object
+          properties:
+            primaryKey: { type: string }
+            uid: { type: string }
+            displayname: { type: string }
+    SystemTag:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        userVisible: { type: boolean }
+        userAssignable: { type: boolean }
+        canAssign: { type: boolean }
+    Capabilities:
+      type: object
+      properties:
+        version:
+          type: object
+          properties:
+            major: { type: integer }
+            minor: { type: integer }
+            micro: { type: integer }
+            string: { type: string }
+            edition: { type: string }
+            extendedSupport: { type: boolean }
+        capabilities: { type: object }
+
+security:
+  - basicAuth: []
+
+paths:
+  # ─── Capabilities / Server Info ────────────────────────────────────────────
+  /ocs/v2.php/cloud/capabilities:
+    get:
+      operationId: getCapabilities
+      summary: Get server capabilities and version
+      x-cli-resource: server
+      x-cli-command: info
+      x-cli-description: Show server version, enabled apps, and feature capabilities
+      parameters:
+        - name: OCS-APIRequest
+          in: header
+          required: true
+          schema: { type: string, default: "true" }
+        - name: format
+          in: query
+          schema: { type: string, default: json }
+      responses:
+        "200":
+          description: Server capabilities
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/OCSEnvelope"
+
+  # ─── Files — WebDAV ────────────────────────────────────────────────────────
+  /remote.php/dav/files/{user}/{path}:
+    get:
+      operationId: downloadFile
+      summary: Download a file
+      x-cli-resource: files
+      x-cli-command: download
+      x-cli-description: Download a file from Nextcloud to local disk or stdout
+      parameters:
+        - name: user
+          in: path
+          required: true
+          schema: { type: string }
+          x-cli-env: NEXTCLOUD_USERNAME
+        - name: path
+          in: path
+          required: true
+          schema: { type: string }
+          x-cli-flag: path
+          description: Remote path to file (e.g. Documents/report.pdf)
+      responses:
+        "200":
+          description: File content
+          content:
+            application/octet-stream:
+              schema: { type: string, format: binary }
+    put:
+      operationId: uploadFile
+      summary: Upload a file
+      x-cli-resource: files
+      x-cli-command: upload
+      x-cli-description: Upload a local file to Nextcloud (overwrites if --overwrite)
+      parameters:
+        - name: user
+          in: path
+          required: true
+          schema: { type: string }
+          x-cli-env: NEXTCLOUD_USERNAME
+        - name: path
+          in: path
+          required: true
+          schema: { type: string }
+          x-cli-flag: dest
+          description: Remote destination path
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema: { type: string, format: binary }
+      responses:
+        "201": { description: File created }
+        "204": { description: File updated }
+    delete:
+      operationId: deleteFile
+      summary: Delete a file or directory
+      x-cli-resource: files
+      x-cli-command: delete
+      x-cli-description: Delete a file or directory (use --recursive for directories)
+      parameters:
+        - name: user
+          in: path
+          required: true
+          schema: { type: string }
+          x-cli-env: NEXTCLOUD_USERNAME
+        - name: path
+          in: path
+          required: true
+          schema: { type: string }
+          x-cli-flag: path
+      responses:
+        "204": { description: Deleted }
+
+  /remote.php/dav/files/{user}:
+    propfind:
+      operationId: listFiles
+      summary: List files and directories (WebDAV PROPFIND)
+      x-cli-resource: files
+      x-cli-command: list
+      x-cli-description: List files in a directory (WebDAV PROPFIND); use --recursive for tree view
+      parameters:
+        - name: user
+          in: path
+          required: true
+          schema: { type: string }
+          x-cli-env: NEXTCLOUD_USERNAME
+        - name: Depth
+          in: header
+          schema: { type: string, default: "1" }
+          description: "1 for directory listing, infinity for recursive"
+      requestBody:
+        required: false
+        content:
+          application/xml:
+            schema: { type: string }
+      responses:
+        "207":
+          description: Multi-status file listing
+          content:
+            application/xml:
+              schema: { type: string }
+
+  /remote.php/dav/files/{user}/{dir}:
+    mkcol:
+      operationId: createDirectory
+      summary: Create a directory (WebDAV MKCOL)
+      x-cli-resource: files
+      x-cli-command: mkdir
+      x-cli-description: Create a directory on Nextcloud (use --parents for nested)
+      parameters:
+        - name: user
+          in: path
+          required: true
+          schema: { type: string }
+          x-cli-env: NEXTCLOUD_USERNAME
+        - name: dir
+          in: path
+          required: true
+          schema: { type: string }
+          x-cli-flag: path
+          description: Directory path to create
+      responses:
+        "201": { description: Created }
+
+  # ─── Shares ────────────────────────────────────────────────────────────────
+  /ocs/v2.php/apps/files_sharing/api/v1/shares:
+    get:
+      operationId: listShares
+      summary: List all shares
+      x-cli-resource: shares
+      x-cli-command: list
+      x-cli-description: List shares (optionally filter by path, share type, or shared-with-me)
+      parameters:
+        - name: OCS-APIRequest
+          in: header
+          required: true
+          schema: { type: string, default: "true" }
+        - name: format
+          in: query
+          schema: { type: string, default: json }
+        - name: path
+          in: query
+          schema: { type: string }
+          description: Filter shares for a specific path
+        - name: reshares
+          in: query
+          schema: { type: boolean }
+        - name: subfiles
+          in: query
+          schema: { type: boolean }
+          description: Also list shares of sub-files when path is a folder
+        - name: shared_with_me
+          in: query
+          schema: { type: boolean }
+      responses:
+        "200":
+          description: List of shares
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/OCSEnvelope"
+    post:
+      operationId: createShare
+      summary: Create a share
+      x-cli-resource: shares
+      x-cli-command: create
+      x-cli-description: Share a file/folder with a user, group, or public link
+      parameters:
+        - name: OCS-APIRequest
+          in: header
+          required: true
+          schema: { type: string, default: "true" }
+        - name: format
+          in: query
+          schema: { type: string, default: json }
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [path, shareType]
+              properties:
+                path:
+                  type: string
+                  description: Path to the item to share
+                shareType:
+                  type: integer
+                  description: "0=user, 1=group, 3=public link, 4=email, 6=federated, 7=circle, 10=talk"
+                shareWith:
+                  type: string
+                  description: "User/group/email to share with (not required for public links)"
+                permissions:
+                  type: integer
+                  description: "Permission bitmap: 1=read, 2=update, 4=create, 8=delete, 16=share, 31=all"
+                password:
+                  type: string
+                  description: Password for public link
+                expireDate:
+                  type: string
+                  format: date
+                  description: "Expiry date (YYYY-MM-DD)"
+                note:
+                  type: string
+                label:
+                  type: string
+                hideDownload:
+                  type: boolean
+      responses:
+        "200":
+          description: Share created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/OCSEnvelope"
+
+  /ocs/v2.php/apps/files_sharing/api/v1/shares/{shareId}:
+    get:
+      operationId: getShare
+      summary: Get share details
+      x-cli-resource: shares
+      x-cli-command: get
+      parameters:
+        - name: OCS-APIRequest
+          in: header
+          required: true
+          schema: { type: string, default: "true" }
+        - name: format
+          in: query
+          schema: { type: string, default: json }
+        - name: shareId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Share info
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/OCSEnvelope"
+    put:
+      operationId: updateShare
+      summary: Update a share (permissions, expiry, password)
+      x-cli-resource: shares
+      x-cli-command: update
+      x-cli-description: Update share permissions, expiry date, or password
+      parameters:
+        - name: OCS-APIRequest
+          in: header
+          required: true
+          schema: { type: string, default: "true" }
+        - name: format
+          in: query
+          schema: { type: string, default: json }
+        - name: shareId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                permissions: { type: integer }
+                password: { type: string }
+                expireDate: { type: string, format: date }
+                note: { type: string }
+                hideDownload: { type: boolean }
+      responses:
+        "200":
+          description: Share updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/OCSEnvelope"
+    delete:
+      operationId: deleteShare
+      summary: Delete a share
+      x-cli-resource: shares
+      x-cli-command: delete
+      x-cli-description: Remove a share by ID
+      parameters:
+        - name: OCS-APIRequest
+          in: header
+          required: true
+          schema: { type: string, default: "true" }
+        - name: format
+          in: query
+          schema: { type: string, default: json }
+        - name: shareId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Share deleted
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/OCSEnvelope"
+
+  # ─── Users ─────────────────────────────────────────────────────────────────
+  /ocs/v2.php/cloud/users:
+    get:
+      operationId: listUsers
+      summary: List users
+      x-cli-resource: users
+      x-cli-command: list
+      x-cli-description: List all users (admin only); use --disabled to filter inactive
+      parameters:
+        - name: OCS-APIRequest
+          in: header
+          required: true
+          schema: { type: string, default: "true" }
+        - name: format
+          in: query
+          schema: { type: string, default: json }
+        - name: search
+          in: query
+          schema: { type: string }
+          description: Search filter
+        - name: limit
+          in: query
+          schema: { type: integer, default: 100 }
+        - name: offset
+          in: query
+          schema: { type: integer, default: 0 }
+        - name: disabled
+          in: query
+          schema: { type: boolean }
+          description: Only return disabled users
+      responses:
+        "200":
+          description: User list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/OCSEnvelope"
+    post:
+      operationId: createUser
+      summary: Create a new user
+      x-cli-resource: users
+      x-cli-command: create
+      x-cli-description: Create a new Nextcloud user (admin only)
+      parameters:
+        - name: OCS-APIRequest
+          in: header
+          required: true
+          schema: { type: string, default: "true" }
+        - name: format
+          in: query
+          schema: { type: string, default: json }
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [userid]
+              properties:
+                userid: { type: string }
+                password: { type: string }
+                displayName: { type: string }
+                email: { type: string }
+                groups: { type: array, items: { type: string } }
+                subadmin: { type: array, items: { type: string } }
+                quota: { type: string }
+                language: { type: string }
+      responses:
+        "200":
+          description: User created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/OCSEnvelope"
+
+  /ocs/v2.php/cloud/users/{userId}:
+    get:
+      operationId: getUser
+      summary: Get user details
+      x-cli-resource: users
+      x-cli-command: get
+      x-cli-description: Get detailed user info including quota, groups, and status
+      parameters:
+        - name: OCS-APIRequest
+          in: header
+          required: true
+          schema: { type: string, default: "true" }
+        - name: format
+          in: query
+          schema: { type: string, default: json }
+        - name: userId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: User details
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/OCSEnvelope"
+    put:
+      operationId: updateUser
+      summary: Update user attributes
+      x-cli-resource: users
+      x-cli-command: update
+      x-cli-description: Update a user's display name, email, password, or quota
+      parameters:
+        - name: OCS-APIRequest
+          in: header
+          required: true
+          schema: { type: string, default: "true" }
+        - name: format
+          in: query
+          schema: { type: string, default: json }
+        - name: userId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                key:
+                  type: string
+                  enum: [email, displayname, password, quota, phone, address, website, twitter, locale, language]
+                value: { type: string }
+      responses:
+        "200":
+          description: User updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/OCSEnvelope"
+    delete:
+      operationId: deleteUser
+      summary: Delete a user
+      x-cli-resource: users
+      x-cli-command: delete
+      parameters:
+        - name: OCS-APIRequest
+          in: header
+          required: true
+          schema: { type: string, default: "true" }
+        - name: format
+          in: query
+          schema: { type: string, default: json }
+        - name: userId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: User deleted
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/OCSEnvelope"
+
+  /ocs/v2.php/cloud/users/{userId}/enable:
+    put:
+      operationId: enableUser
+      summary: Enable a user
+      x-cli-resource: users
+      x-cli-command: enable
+      parameters:
+        - name: OCS-APIRequest
+          in: header
+          required: true
+          schema: { type: string, default: "true" }
+        - name: format
+          in: query
+          schema: { type: string, default: json }
+        - name: userId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: User enabled
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/OCSEnvelope"
+
+  /ocs/v2.php/cloud/users/{userId}/disable:
+    put:
+      operationId: disableUser
+      summary: Disable a user
+      x-cli-resource: users
+      x-cli-command: disable
+      x-cli-description: Disable a user (admin only); they can no longer log in
+      parameters:
+        - name: OCS-APIRequest
+          in: header
+          required: true
+          schema: { type: string, default: "true" }
+        - name: format
+          in: query
+          schema: { type: string, default: json }
+        - name: userId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: User disabled
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/OCSEnvelope"
+
+  /ocs/v2.php/cloud/users/{userId}/groups:
+    get:
+      operationId: getUserGroups
+      summary: Get groups for a user
+      x-cli-resource: users
+      x-cli-command: groups
+      parameters:
+        - name: OCS-APIRequest
+          in: header
+          required: true
+          schema: { type: string, default: "true" }
+        - name: format
+          in: query
+          schema: { type: string, default: json }
+        - name: userId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Group list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/OCSEnvelope"
+    post:
+      operationId: addUserToGroup
+      summary: Add user to group
+      x-cli-resource: users
+      x-cli-command: add-group
+      x-cli-description: Add a user to a group (admin only)
+      parameters:
+        - name: OCS-APIRequest
+          in: header
+          required: true
+          schema: { type: string, default: "true" }
+        - name: format
+          in: query
+          schema: { type: string, default: json }
+        - name: userId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [groupid]
+              properties:
+                groupid: { type: string }
+      responses:
+        "200":
+          description: Added to group
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/OCSEnvelope"
+
+  /ocs/v2.php/cloud/users/{userId}/groups/{groupId}:
+    delete:
+      operationId: removeUserFromGroup
+      summary: Remove user from group
+      x-cli-resource: users
+      x-cli-command: remove-group
+      parameters:
+        - name: OCS-APIRequest
+          in: header
+          required: true
+          schema: { type: string, default: "true" }
+        - name: format
+          in: query
+          schema: { type: string, default: json }
+        - name: userId
+          in: path
+          required: true
+          schema: { type: string }
+        - name: groupId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Removed from group
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/OCSEnvelope"
+
+  # ─── Groups ────────────────────────────────────────────────────────────────
+  /ocs/v2.php/cloud/groups:
+    get:
+      operationId: listGroups
+      summary: List groups
+      x-cli-resource: groups
+      x-cli-command: list
+      x-cli-description: List all groups; use --search to filter by name
+      parameters:
+        - name: OCS-APIRequest
+          in: header
+          required: true
+          schema: { type: string, default: "true" }
+        - name: format
+          in: query
+          schema: { type: string, default: json }
+        - name: search
+          in: query
+          schema: { type: string }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 100 }
+        - name: offset
+          in: query
+          schema: { type: integer, default: 0 }
+      responses:
+        "200":
+          description: Group list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/OCSEnvelope"
+    post:
+      operationId: createGroup
+      summary: Create a group
+      x-cli-resource: groups
+      x-cli-command: create
+      parameters:
+        - name: OCS-APIRequest
+          in: header
+          required: true
+          schema: { type: string, default: "true" }
+        - name: format
+          in: query
+          schema: { type: string, default: json }
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [groupid]
+              properties:
+                groupid: { type: string }
+                displayname: { type: string }
+      responses:
+        "200":
+          description: Group created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/OCSEnvelope"
+
+  /ocs/v2.php/cloud/groups/{groupId}:
+    get:
+      operationId: getGroupMembers
+      summary: Get group members
+      x-cli-resource: groups
+      x-cli-command: members
+      x-cli-description: List all members of a group
+      parameters:
+        - name: OCS-APIRequest
+          in: header
+          required: true
+          schema: { type: string, default: "true" }
+        - name: format
+          in: query
+          schema: { type: string, default: json }
+        - name: groupId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Group members
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/OCSEnvelope"
+    delete:
+      operationId: deleteGroup
+      summary: Delete a group
+      x-cli-resource: groups
+      x-cli-command: delete
+      parameters:
+        - name: OCS-APIRequest
+          in: header
+          required: true
+          schema: { type: string, default: "true" }
+        - name: format
+          in: query
+          schema: { type: string, default: json }
+        - name: groupId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Group deleted
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/OCSEnvelope"
+
+  # ─── Notes ─────────────────────────────────────────────────────────────────
+  /index.php/apps/notes/api/v1/notes:
+    get:
+      operationId: listNotes
+      summary: List all notes
+      x-cli-resource: notes
+      x-cli-command: list
+      x-cli-description: List notes; filter by --category, --fav for favorites
+      parameters:
+        - name: category
+          in: query
+          schema: { type: string }
+          description: Filter by category
+        - name: exclude
+          in: query
+          schema: { type: string }
+          description: Fields to exclude (comma-separated, e.g. "content" for titles only)
+        - name: pagesizes
+          in: query
+          schema: { type: integer }
+        - name: chunksize
+          in: query
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Notes list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/NoteEntry"
+    post:
+      operationId: createNote
+      summary: Create a note
+      x-cli-resource: notes
+      x-cli-command: create
+      x-cli-description: Create a new note; pipe content via stdin or use --content
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title: { type: string }
+                content: { type: string }
+                category: { type: string }
+                favorite: { type: boolean }
+                modified: { type: integer }
+      responses:
+        "200":
+          description: Note created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NoteEntry"
+
+  /index.php/apps/notes/api/v1/notes/{noteId}:
+    get:
+      operationId: getNote
+      summary: Get a note
+      x-cli-resource: notes
+      x-cli-command: get
+      parameters:
+        - name: noteId
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Note content
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NoteEntry"
+    put:
+      operationId: updateNote
+      summary: Update a note
+      x-cli-resource: notes
+      x-cli-command: edit
+      x-cli-description: Update a note's title, content, or category; use --content or stdin
+      parameters:
+        - name: noteId
+          in: path
+          required: true
+          schema: { type: integer }
+        - name: If-Match
+          in: header
+          schema: { type: string }
+          description: ETag for conflict detection
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title: { type: string }
+                content: { type: string }
+                category: { type: string }
+                favorite: { type: boolean }
+      responses:
+        "200":
+          description: Note updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NoteEntry"
+    delete:
+      operationId: deleteNote
+      summary: Delete a note
+      x-cli-resource: notes
+      x-cli-command: delete
+      parameters:
+        - name: noteId
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200": { description: Note deleted }
+
+  # ─── Talk / Spreed ─────────────────────────────────────────────────────────
+  /ocs/v2.php/apps/spreed/api/v4/room:
+    get:
+      operationId: listRooms
+      summary: List Talk conversations
+      x-cli-resource: talk
+      x-cli-command: rooms
+      x-cli-description: List Talk conversations/rooms; filter by --type
+      parameters:
+        - name: OCS-APIRequest
+          in: header
+          required: true
+          schema: { type: string, default: "true" }
+        - name: format
+          in: query
+          schema: { type: string, default: json }
+        - name: noStatusUpdate
+          in: query
+          schema: { type: integer }
+        - name: includeStatus
+          in: query
+          schema: { type: boolean }
+      responses:
+        "200":
+          description: Room list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/OCSEnvelope"
+
+  /ocs/v2.php/apps/spreed/api/v1/chat/{token}:
+    get:
+      operationId: readMessages
+      summary: Read messages from a Talk room
+      x-cli-resource: talk
+      x-cli-command: messages
+      x-cli-description: Read recent messages from a Talk conversation
+      parameters:
+        - name: OCS-APIRequest
+          in: header
+          required: true
+          schema: { type: string, default: "true" }
+        - name: format
+          in: query
+          schema: { type: string, default: json }
+        - name: token
+          in: path
+          required: true
+          schema: { type: string }
+          description: Room token
+        - name: lookIntoFuture
+          in: query
+          schema: { type: integer, enum: [0, 1], default: 0 }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 100 }
+        - name: lastKnownMessageId
+          in: query
+          schema: { type: integer }
+        - name: lastCommonReadMessageId
+          in: query
+          schema: { type: integer }
+        - name: timeout
+          in: query
+          schema: { type: integer }
+        - name: setReadMarker
+          in: query
+          schema: { type: integer, enum: [0, 1] }
+        - name: includeLastKnown
+          in: query
+          schema: { type: integer, enum: [0, 1] }
+      responses:
+        "200":
+          description: Messages
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/OCSEnvelope"
+    post:
+      operationId: sendMessage
+      summary: Send a message to a Talk room
+      x-cli-resource: talk
+      x-cli-command: send
+      x-cli-description: Send a chat message to a Talk room by its token
+      parameters:
+        - name: OCS-APIRequest
+          in: header
+          required: true
+          schema: { type: string, default: "true" }
+        - name: format
+          in: query
+          schema: { type: string, default: json }
+        - name: token
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [message]
+              properties:
+                message: { type: string }
+                actorDisplayName: { type: string }
+                replyTo: { type: integer }
+                referenceId: { type: string }
+      responses:
+        "201":
+          description: Message sent
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/OCSEnvelope"
+
+  # ─── Activity ──────────────────────────────────────────────────────────────
+  /ocs/v2.php/apps/activity/api/v2/activity/filter:
+    get:
+      operationId: listActivity
+      summary: List activity feed
+      x-cli-resource: activity
+      x-cli-command: list
+      x-cli-description: Get recent activity; filter by --type, --object, or --user
+      parameters:
+        - name: OCS-APIRequest
+          in: header
+          required: true
+          schema: { type: string, default: "true" }
+        - name: format
+          in: query
+          schema: { type: string, default: json }
+        - name: filter
+          in: query
+          schema: { type: string }
+          description: "Activity type filter (e.g. files, shared, contacts)"
+        - name: limit
+          in: query
+          schema: { type: integer, default: 50 }
+        - name: since
+          in: query
+          schema: { type: integer }
+          description: Activity ID to start from (pagination)
+        - name: until
+          in: query
+          schema: { type: integer }
+        - name: sort
+          in: query
+          schema: { type: string, enum: [asc, desc], default: desc }
+        - name: object_type
+          in: query
+          schema: { type: string }
+        - name: object_id
+          in: query
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Activity feed
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/OCSEnvelope"
+
+  # ─── User Status ───────────────────────────────────────────────────────────
+  /ocs/v2.php/apps/user_status/api/v1/user_status:
+    get:
+      operationId: getUserStatus
+      summary: Get own user status
+      x-cli-resource: status
+      x-cli-command: get
+      x-cli-description: Get your current user status (emoji, message, availability)
+      parameters:
+        - name: OCS-APIRequest
+          in: header
+          required: true
+          schema: { type: string, default: "true" }
+        - name: format
+          in: query
+          schema: { type: string, default: json }
+      responses:
+        "200":
+          description: User status
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/OCSEnvelope"
+
+  /ocs/v2.php/apps/user_status/api/v1/user_status/message/custom:
+    put:
+      operationId: setUserStatusMessage
+      summary: Set user status message
+      x-cli-resource: status
+      x-cli-command: set
+      x-cli-description: Set your status message and emoji (--message, --emoji, --clear-at)
+      parameters:
+        - name: OCS-APIRequest
+          in: header
+          required: true
+          schema: { type: string, default: "true" }
+        - name: format
+          in: query
+          schema: { type: string, default: json }
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                statusIcon: { type: string }
+                message: { type: string }
+                clearAt: { type: integer }
+      responses:
+        "200":
+          description: Status set
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/OCSEnvelope"
+
+  /ocs/v2.php/apps/user_status/api/v1/user_status/message:
+    delete:
+      operationId: clearUserStatusMessage
+      summary: Clear user status message
+      x-cli-resource: status
+      x-cli-command: clear
+      parameters:
+        - name: OCS-APIRequest
+          in: header
+          required: true
+          schema: { type: string, default: "true" }
+        - name: format
+          in: query
+          schema: { type: string, default: json }
+      responses:
+        "200":
+          description: Status cleared
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/OCSEnvelope"
+
+  /ocs/v2.php/apps/user_status/api/v1/statuses:
+    get:
+      operationId: listUserStatuses
+      summary: List all user statuses
+      x-cli-resource: status
+      x-cli-command: list
+      x-cli-description: List statuses of all users (shows online/offline/DND/away)
+      parameters:
+        - name: OCS-APIRequest
+          in: header
+          required: true
+          schema: { type: string, default: "true" }
+        - name: format
+          in: query
+          schema: { type: string, default: json }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 100 }
+        - name: offset
+          in: query
+          schema: { type: integer, default: 0 }
+      responses:
+        "200":
+          description: User statuses
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/OCSEnvelope"
+
+  # ─── Notifications ─────────────────────────────────────────────────────────
+  /ocs/v2.php/apps/admin_notifications/api/v1/notifications/{userId}:
+    post:
+      operationId: sendNotification
+      summary: Send a notification to a user
+      x-cli-resource: notifications
+      x-cli-command: send
+      x-cli-description: Send an admin notification to a specific user (admin only)
+      parameters:
+        - name: OCS-APIRequest
+          in: header
+          required: true
+          schema: { type: string, default: "true" }
+        - name: format
+          in: query
+          schema: { type: string, default: json }
+        - name: userId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [shortMessage]
+              properties:
+                shortMessage: { type: string }
+                longMessage: { type: string }
+      responses:
+        "200":
+          description: Notification sent
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/OCSEnvelope"
+
+  /ocs/v2.php/apps/notifications/api/v2/notifications:
+    get:
+      operationId: listNotifications
+      summary: List your notifications
+      x-cli-resource: notifications
+      x-cli-command: list
+      x-cli-description: List pending notifications for the authenticated user
+      parameters:
+        - name: OCS-APIRequest
+          in: header
+          required: true
+          schema: { type: string, default: "true" }
+        - name: format
+          in: query
+          schema: { type: string, default: json }
+      responses:
+        "200":
+          description: Notifications
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/OCSEnvelope"
+
+  # ─── System Tags ───────────────────────────────────────────────────────────
+  /remote.php/dav/systemtags:
+    propfind:
+      operationId: listSystemTags
+      summary: List system tags (WebDAV PROPFIND)
+      x-cli-resource: tags
+      x-cli-command: list
+      x-cli-description: List all system tags on this Nextcloud instance
+      requestBody:
+        content:
+          application/xml:
+            schema: { type: string }
+      responses:
+        "207":
+          description: System tags
+          content:
+            application/xml:
+              schema: { type: string }
+    post:
+      operationId: createSystemTag
+      summary: Create a system tag
+      x-cli-resource: tags
+      x-cli-command: create
+      parameters:
+        - name: Content-Type
+          in: header
+          required: true
+          schema: { type: string, default: application/json }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string }
+                userVisible: { type: boolean, default: true }
+                userAssignable: { type: boolean, default: true }
+      responses:
+        "201": { description: Tag created }
+
+  /remote.php/dav/systemtags-relations/files/{fileId}/{tagId}:
+    put:
+      operationId: tagFile
+      summary: Tag a file with a system tag
+      x-cli-resource: tags
+      x-cli-command: tag-file
+      x-cli-description: Assign a system tag to a file by file ID and tag ID
+      parameters:
+        - name: fileId
+          in: path
+          required: true
+          schema: { type: integer }
+        - name: tagId
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "201": { description: Tag assigned }
+    delete:
+      operationId: untagFile
+      summary: Remove a tag from a file
+      x-cli-resource: tags
+      x-cli-command: untag-file
+      parameters:
+        - name: fileId
+          in: path
+          required: true
+          schema: { type: integer }
+        - name: tagId
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "204": { description: Tag removed }
+
+  # ─── Deck ──────────────────────────────────────────────────────────────────
+  /index.php/apps/deck/api/v1.0/boards:
+    get:
+      operationId: listDeckBoards
+      summary: List Deck boards
+      x-cli-resource: deck
+      x-cli-command: boards
+      x-cli-description: List all Deck boards you have access to
+      parameters:
+        - name: details
+          in: query
+          schema: { type: integer, enum: [0, 1] }
+      responses:
+        "200":
+          description: Deck boards
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DeckBoard"
+    post:
+      operationId: createDeckBoard
+      summary: Create a Deck board
+      x-cli-resource: deck
+      x-cli-command: create-board
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, color]
+              properties:
+                title: { type: string }
+                color: { type: string, description: "Hex color without # (e.g. ff0000)" }
+      responses:
+        "200":
+          description: Board created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeckBoard"
+
+  /index.php/apps/deck/api/v1.0/boards/{boardId}:
+    get:
+      operationId: getDeckBoard
+      summary: Get a Deck board
+      x-cli-resource: deck
+      x-cli-command: board
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Board details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeckBoard"
+
+  /index.php/apps/deck/api/v1.0/boards/{boardId}/stacks:
+    get:
+      operationId: listDeckStacks
+      summary: List stacks in a Deck board
+      x-cli-resource: deck
+      x-cli-command: stacks
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Stack list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DeckStack"
+
+  /index.php/apps/deck/api/v1.0/boards/{boardId}/stacks/{stackId}/cards:
+    post:
+      operationId: createDeckCard
+      summary: Create a card in a Deck stack
+      x-cli-resource: deck
+      x-cli-command: create-card
+      x-cli-description: Create a new card in a Deck stack (board + stack IDs required)
+      parameters:
+        - name: boardId
+          in: path
+          required: true
+          schema: { type: integer }
+        - name: stackId
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title]
+              properties:
+                title: { type: string }
+                description: { type: string }
+                duedate: { type: string, format: date-time }
+                order: { type: integer }
+      responses:
+        "200":
+          description: Card created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeckCard"
+
+  # ─── Calendar (CalDAV) ─────────────────────────────────────────────────────
+  /remote.php/dav/calendars/{user}:
+    propfind:
+      operationId: listCalendars
+      summary: List calendars (CalDAV PROPFIND)
+      x-cli-resource: calendar
+      x-cli-command: list-cals
+      x-cli-description: List all calendars for a user
+      parameters:
+        - name: user
+          in: path
+          required: true
+          schema: { type: string }
+          x-cli-env: NEXTCLOUD_USERNAME
+        - name: Depth
+          in: header
+          schema: { type: string, default: "1" }
+      requestBody:
+        content:
+          application/xml:
+            schema: { type: string }
+      responses:
+        "207":
+          description: Calendar list
+          content:
+            application/xml:
+              schema: { type: string }
+
+  /remote.php/dav/calendars/{user}/{calendar}:
+    report:
+      operationId: listEvents
+      summary: List calendar events (CalDAV REPORT)
+      x-cli-resource: calendar
+      x-cli-command: events
+      x-cli-description: List events in a calendar; filter by --from, --to date range
+      parameters:
+        - name: user
+          in: path
+          required: true
+          schema: { type: string }
+          x-cli-env: NEXTCLOUD_USERNAME
+        - name: calendar
+          in: path
+          required: true
+          schema: { type: string }
+          description: Calendar name/path
+        - name: Depth
+          in: header
+          schema: { type: string, default: "1" }
+      requestBody:
+        content:
+          application/xml:
+            schema: { type: string }
+            example: |
+              <?xml version="1.0" encoding="utf-8" ?>
+              <C:calendar-query xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav">
+                <D:prop><D:getetag/><C:calendar-data/></D:prop>
+                <C:filter>
+                  <C:comp-filter name="VCALENDAR">
+                    <C:comp-filter name="VEVENT"/>
+                  </C:comp-filter>
+                </C:filter>
+              </C:calendar-query>
+      responses:
+        "207":
+          description: Events
+          content:
+            application/xml:
+              schema: { type: string }
+
+  /remote.php/dav/calendars/{user}/{calendar}/{eventFile}:
+    put:
+      operationId: createEvent
+      summary: Create a calendar event (CalDAV PUT)
+      x-cli-resource: calendar
+      x-cli-command: create-event
+      x-cli-description: Create a new calendar event from an .ics file or iCal string
+      parameters:
+        - name: user
+          in: path
+          required: true
+          schema: { type: string }
+          x-cli-env: NEXTCLOUD_USERNAME
+        - name: calendar
+          in: path
+          required: true
+          schema: { type: string }
+        - name: eventFile
+          in: path
+          required: true
+          schema: { type: string }
+          description: "Filename for the event (e.g. event-uid.ics)"
+        - name: Content-Type
+          in: header
+          required: true
+          schema: { type: string, default: "text/calendar; charset=utf-8" }
+      requestBody:
+        required: true
+        content:
+          text/calendar:
+            schema: { type: string }
+      responses:
+        "201": { description: Event created }
+
+  # ─── Contacts (CardDAV) ────────────────────────────────────────────────────
+  /remote.php/dav/addressbooks/{user}/{addressbook}:
+    propfind:
+      operationId: listContacts
+      summary: List contacts (CardDAV PROPFIND)
+      x-cli-resource: contacts
+      x-cli-command: list
+      x-cli-description: List contacts in an address book; use --json for structured output
+      parameters:
+        - name: user
+          in: path
+          required: true
+          schema: { type: string }
+          x-cli-env: NEXTCLOUD_USERNAME
+        - name: addressbook
+          in: path
+          required: true
+          schema: { type: string, default: contacts }
+          description: Address book name
+        - name: Depth
+          in: header
+          schema: { type: string, default: "1" }
+      requestBody:
+        content:
+          application/xml:
+            schema: { type: string }
+      responses:
+        "207":
+          description: Contacts list
+          content:
+            application/xml:
+              schema: { type: string }
+
+  /remote.php/dav/addressbooks/{user}/{addressbook}/{contactFile}:
+    put:
+      operationId: createContact
+      summary: Create/update a contact (CardDAV PUT)
+      x-cli-resource: contacts
+      x-cli-command: create
+      x-cli-description: Create or update a contact from a .vcf file or vCard string
+      parameters:
+        - name: user
+          in: path
+          required: true
+          schema: { type: string }
+          x-cli-env: NEXTCLOUD_USERNAME
+        - name: addressbook
+          in: path
+          required: true
+          schema: { type: string, default: contacts }
+        - name: contactFile
+          in: path
+          required: true
+          schema: { type: string }
+          description: "Filename for the contact (e.g. contact-uid.vcf)"
+        - name: Content-Type
+          in: header
+          required: true
+          schema: { type: string, default: "text/vcard; charset=utf-8" }
+      requestBody:
+        required: true
+        content:
+          text/vcard:
+            schema: { type: string }
+      responses:
+        "201": { description: Contact created }
+    delete:
+      operationId: deleteContact
+      summary: Delete a contact
+      x-cli-resource: contacts
+      x-cli-command: delete
+      parameters:
+        - name: user
+          in: path
+          required: true
+          schema: { type: string }
+          x-cli-env: NEXTCLOUD_USERNAME
+        - name: addressbook
+          in: path
+          required: true
+          schema: { type: string }
+        - name: contactFile
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "204": { description: Contact deleted }
+
+x-cli-commands:
+  - name: storage-summary
+    resource: files
+    description: "Summarize storage usage across all users and shares (transcendence: joins files+shares+users via local SQLite)"
+    hand-coded: true
+    flags:
+      - name: user
+        type: string
+        description: Filter to a specific user
+      - name: threshold
+        type: float
+        description: Only show users above this quota % (0-100)
+        default: "0"
+
+  - name: shares-stale
+    resource: shares
+    description: "Report shares that have expired or not been accessed in N days (transcendence: time-diff on expiry + last-modified)"
+    hand-coded: true
+    flags:
+      - name: days
+        type: int
+        description: Shares not accessed in this many days are stale
+        default: "30"
+
+  - name: access-tree
+    resource: shares
+    description: "Show who has access to a path (users + groups via share graph traversal — transcendence)"
+    hand-coded: true
+    flags:
+      - name: path
+        type: string
+        required: true
+        description: Cloud path to inspect (e.g. /Documents/Budget.xlsx)
+
+  - name: digest
+    resource: activity
+    description: "Recent activity digest grouped by user+file (transcendence: aggregates multiple API calls)"
+    hand-coded: true
+    flags:
+      - name: since
+        type: string
+        description: "Time window (e.g. 24h, 7d)"
+        default: "24h"
+      - name: user
+        type: string
+        description: Filter to a specific user
+
+  - name: quota-check
+    resource: users
+    description: "Monitor quota usage; alert when users exceed threshold (transcendence: polls all users, stores trend)"
+    hand-coded: true
+    flags:
+      - name: threshold
+        type: float
+        description: Alert when quota % exceeds this value
+        default: "80"
+
+  - name: sync-status
+    resource: files
+    description: "Compare local SQLite snapshot vs live API to detect drift (transcendence)"
+    hand-coded: true
+    flags:
+      - name: path
+        type: string
+        description: Scope to a subdirectory
+        default: "/"
+
+  - name: context
+    resource: server
+    description: "Dump all relevant user state as a single JSON for AI agent consumption (transcendence)"
+    hand-coded: true
+    flags:
+      - name: user
+        type: string
+        description: "User to dump context for (defaults to authenticated user)"
