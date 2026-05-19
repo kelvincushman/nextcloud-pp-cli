@@ -1,6 +1,7 @@
-# Binaries
-nextcloud-pp-cli
-nextcloud-pp-mcp
+# Binaries — Makefile builds into bin/ (`go build -o bin/nextcloud-pp-cli`).
+# Anchor with bin/ so the cmd/nextcloud-pp-cli/ source directory isn't
+# accidentally ignored by the unanchored binary name.
+bin/
 build/
 
 # Go
