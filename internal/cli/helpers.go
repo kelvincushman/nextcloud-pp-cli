@@ -530,8 +530,31 @@ func newTabWriter(w io.Writer) *tabwriter.Writer {
 
 // replacePathParam percent-encodes value so path-reserved characters in
 // user input do not collapse into extra path segments.
+//
+// The "path" placeholder is treated specially: its value is a full WebDAV
+// path (e.g. `/Nova-PAI/foo/bar.md`) where `/` is a meaningful separator,
+// not a character to escape. Splitting on `/` and escaping each segment
+// individually preserves the slashes while still escaping any in-segment
+// special characters (spaces, `?`, `#`, etc.). All other placeholders
+// (`{user}`, `{id}`, etc.) are treated as opaque single segments and
+// their `/` characters are escaped to `%2F` as before.
+//
+// Issue: https://github.com/kelvincushman/nextcloud-pp-cli/issues/1 —
+// upload-file / download-file / delete-file all use the `{path}`
+// placeholder; without this branch, multi-segment paths 404 because the
+// WebDAV URL collapses to `.../files/admin/%2FNova-PAI%2Ffoo%2Fbar.md`.
 func replacePathParam(path, name, value string) string {
-	return strings.ReplaceAll(path, "{"+name+"}", url.PathEscape(value))
+	var encoded string
+	if name == "path" {
+		segments := strings.Split(value, "/")
+		for i, seg := range segments {
+			segments[i] = url.PathEscape(seg)
+		}
+		encoded = strings.Join(segments, "/")
+	} else {
+		encoded = url.PathEscape(value)
+	}
+	return strings.ReplaceAll(path, "{"+name+"}", encoded)
 }
 
 // paginatedGet fetches pages and concatenates array results. The headers
