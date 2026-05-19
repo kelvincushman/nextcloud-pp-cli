@@ -17,7 +17,7 @@ import (
 	"nextcloud-pp-cli/internal/config"
 )
 
-var version = "1.0.0"
+var version = "1.0.1"
 
 type rootFlags struct {
 	asJSON        bool
